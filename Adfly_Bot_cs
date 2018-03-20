@@ -1,0 +1,191 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.IO;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Microsoft.Win32;
+
+namespace Adf.ly_Bot
+{
+    public partial class Form1 : Form
+    {
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
+        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
+        private const int MOUSEEVENTF_LEFTUP = 0x04;
+        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
+        private const int MOUSEEVENTF_RIGHTUP = 0x10;
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
+        {
+
+        }
+        PictureBox picturebox1 = new PictureBox();
+        string path;
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+        private void mouseclick()
+        {
+            mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+            mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+
+
+        }
+        private bool findbitmap3(Bitmap bmpNeedle, Bitmap bmpHaystack, out Point location)
+        {
+
+            for (int outerX = 0; outerX < bmpHaystack.Width - bmpNeedle.Width; outerX++)
+            {
+                for (int outerY = 0; outerY < bmpHaystack.Height - bmpNeedle.Height; outerY++)
+                {
+                    for (int innerX = 0; innerX < bmpNeedle.Width; innerX++)
+                    {
+                        for (int innerY = 0; innerY < bmpNeedle.Height; innerY++)
+                        {
+                            Color cNeedle = bmpNeedle.GetPixel(innerX, innerY);
+                            Color cHaystack = bmpHaystack.GetPixel(innerX + outerX, innerY + outerY);
+
+
+                            if (cNeedle.R != cHaystack.R || cNeedle.G != cHaystack.G || cNeedle.B != cHaystack.B)
+                            {
+                                goto NotFound;
+                            }
+                        }
+                    }
+                    location = new Point(outerX, outerY);
+                    return true;
+
+                NotFound:
+                    continue;
+                }
+            }
+            Point sp = Cursor.Position;
+            location = sp;
+            return false;
+        }
+        private void button3_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog theDialog = new OpenFileDialog();
+            theDialog.Title = "Open Text File";
+            theDialog.Filter = "TXT files|*.txt";
+            theDialog.InitialDirectory = @"C:\";
+            if (theDialog.ShowDialog() == DialogResult.OK)
+            {
+                var fileLines = File.ReadAllLines(theDialog.FileName);
+
+                for (int i = 0; i < fileLines.Length; i++)
+                {
+                    listView2.Items.Add(fileLines[i].ToString());
+                }
+
+            }
+            }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog theDialog = new OpenFileDialog();
+            theDialog.Title = "Open Text File";
+            theDialog.Filter = "TXT files|*.txt";
+            theDialog.InitialDirectory = @"C:\";
+            if (theDialog.ShowDialog() == DialogResult.OK)
+            {
+                var fileLines = File.ReadAllLines(theDialog.FileName);
+
+                for (int i = 0; i < fileLines.Length; i++)
+                {
+                    listView1.Items.Add(fileLines[i].ToString());
+                }
+
+            }
+        }
+        private Bitmap screenshot()
+        {
+            Bitmap bmpscreesnhot = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+            Graphics g = Graphics.FromImage(bmpscreesnhot);
+            g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
+            return bmpscreesnhot;
+        }
+        int count;
+        private void button1_Click(object sender, EventArgs e)
+        {
+            int proxy_num = RandomNumber(0, listView2.Items.Count);
+            for (int x = 0; x < listView1.Items.Count; x++)
+            {
+                proxy_change(listView2.Items[proxy_num].SubItems[0].ToString());
+                webBrowser1.ScriptErrorsSuppressed = true;
+                webBrowser1.Refresh();
+               
+                webBrowser1.Navigate(listView1.Items[x].SubItems[0].ToString());
+                Bitmap bmpscreenshot = screenshot();
+                Point location3;
+                bool successful3 = findbitmap3(Properties.Resources.Image1, bmpscreenshot, out location3);
+                NotFound:
+                continue;
+                if (successful3 == true)
+                {
+                    Cursor.Position = location3;
+                    mouseclick();
+
+                    count = count + 1;
+                    label1.Text = count.ToString();
+                    goto NotFound2;
+
+}
+                else
+                {
+                    goto NotFound;
+                }
+            
+            NotFound2:
+                continue;
+            }
+        }
+        public int RandomNumber(int min, int max)
+        {
+            Random random = new Random();
+            return random.Next(min, max);
+        }
+        private void proxy_change(string proxy)
+        {
+            RegistryKey registry = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", true);
+            registry.SetValue("ProxyEnable", 1);
+            registry.SetValue("ProxyServer", proxy);
+            
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog of = new OpenFileDialog();
+            //For any other formats
+            of.Filter = "Image Files (*.bmp;*.jpg;*.jpeg,*.png)|*.BMP;*.JPG;*.JPEG;*.PNG";
+            if (of.ShowDialog() == DialogResult.OK)
+            {
+                picturebox1.ImageLocation = of.FileName;
+                path = of.FileName;
+
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            webBrowser1.ScriptErrorsSuppressed = true;
+            webBrowser1.Navigate("http://activeterium.com/45gm");
+        }
+
+
+
+            
+    }
+}
